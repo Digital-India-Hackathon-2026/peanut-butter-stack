@@ -1,23 +1,23 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: #e2e8f0;
-  background: #050814;
-  --surface: rgba(15, 23, 42, 0.96);
-  --surface-strong: #0f172a;
-  --surface-weak: rgba(15, 23, 42, 0.75);
-  --border: rgba(148, 163, 184, 0.18);
-  --border-strong: rgba(148, 163, 184, 0.28);
-  --text: #e2e8f0;
-  --muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-strong: #60a5fa;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  color: #0f172a;
+  background: #f8fafc;
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-strong: #f8fafc;
+  --surface-weak: rgba(255, 255, 255, 0.72);
+  --border: rgba(148, 163, 184, 0.32);
+  --border-strong: rgba(148, 163, 184, 0.52);
+  --text: #0f172a;
+  --muted: #475569;
+  --accent: #0284c7;
+  --accent-strong: #0ea5e9;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
 }
 
 * {
@@ -32,8 +32,8 @@ body,
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 22%),
-    linear-gradient(180deg, #020617 0%, #060b16 45%, #090f1e 100%);
+  background: radial-gradient(circle at top, rgba(2, 132, 199, 0.08), transparent 22%),
+    linear-gradient(180deg, #f8fafc 0%, #e2e8f0 45%, #f8fafc 100%);
   color: var(--text);
 }
 
@@ -81,7 +81,7 @@ button {
   gap: 1rem;
   padding: 1.6rem 1.8rem;
   border-radius: 24px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
@@ -108,8 +108,8 @@ button {
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.28);
   display: grid;
   place-items: center;
   color: var(--text);
@@ -118,8 +118,8 @@ button {
 
 .icon-btn:hover {
   transform: translateY(-1px);
-  border-color: rgba(56, 189, 248, 0.35);
-  background: rgba(15, 23, 42, 1);
+  border-color: rgba(14, 165, 233, 0.35);
+  background: rgba(255, 255, 255, 1);
 }
 
 .sidebar {
@@ -128,7 +128,7 @@ button {
   gap: 1.5rem;
   padding: 1.5rem;
   border-radius: 28px;
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
@@ -183,8 +183,8 @@ button {
 
 .patient-card {
   width: 100%;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 18px;
   padding: 1rem;
   text-align: left;
@@ -195,8 +195,8 @@ button {
 .patient-card:hover,
 .patient-card.active {
   transform: translateY(-2px);
-  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
-  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
+  border-color: rgba(14, 165, 233, 0.3);
 }
 
 .patient-card-head {
@@ -237,18 +237,18 @@ button {
   font-size: 0.75rem;
 }
 
-.status-normal {
+.status-pill.normal {
   background: rgba(34, 197, 94, 0.12);
   color: #22c55e;
 }
 
-.status-warning {
+.status-pill.warning {
   background: rgba(245, 158, 11, 0.14);
   color: #f59e0b;
 }
 
-.status-critical,
-.status-high-risk {
+.status-pill.critical,
+.status-pill.high-risk {
   background: rgba(239, 68, 68, 0.14);
   color: #ef4444;
 }
@@ -278,8 +278,8 @@ button {
 .patient-details-panel,
 .alerts-panel,
 .timeline-card {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 24px;
   box-shadow: var(--shadow);
 }
@@ -325,8 +325,188 @@ button {
   gap: 1.5rem;
 }
 
-.admin-body {
-  grid-template-columns: 1.55fr 1fr;
+.admin-dashboard-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-overview-cards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-main-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-top-panel {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.top-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.dashboard-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.overview-panels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.ward-status-card,
+.alerts-card,
+.correlation-card,
+.quick-actions-card {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+}
+
+.ward-table,
+.alert-list-card,
+.correlation-list,
+.quick-actions-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.ward-row {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.95rem 1rem;
+  background: rgba(248, 250, 252, 0.9);
+  border-radius: 18px;
+}
+
+.ward-name {
+  margin: 0;
+  font-weight: 700;
+}
+
+.ward-detail {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.ward-progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  overflow: hidden;
+}
+
+.ward-progress {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+}
+
+.ward-alerts {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ward-alerts.up {
+  color: #f59e0b;
+}
+
+.ward-alerts.down {
+  color: #22c55e;
+}
+
+.alert-row,
+.correlation-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.95rem 1rem;
+  background: rgba(248, 250, 252, 0.9);
+  border-radius: 18px;
+}
+
+.alert-patient,
+.correlation-label {
+  margin: 0;
+  font-weight: 700;
+}
+
+.alert-message,
+.correlation-value {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.admin-actions-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr 2fr;
+}
+
+.quick-actions-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.action-pill {
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  background: rgba(15, 23, 42, 0.88);
+  color: var(--text);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.action-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(15, 23, 42, 1);
+}
+
+.admin-table-card-wide {
+  padding: 1.5rem;
+}
+
+.admin-main-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1300px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-overview-cards,
+  .overview-panels,
+  .admin-actions-grid,
+  .doctor-grid,
+  .nurse-dashboard,
+  .nurse-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-table-card,
@@ -341,6 +521,7 @@ button {
 
 .panel-header h2 {
   margin-bottom: 0.35rem;
+  color: var(--text);
 }
 
 .panel-header p {
@@ -368,7 +549,7 @@ button {
 }
 
 .body-row {
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(248, 250, 252, 0.95);
 }
 
 .doctor-grid {
@@ -411,6 +592,9 @@ button {
 .timeline-card,
 .alerts-panel {
   padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: var(--shadow);
 }
 
 .monitor-hero,
@@ -506,7 +690,37 @@ button {
 }
 
 .nurse-grid {
-  grid-template-columns: 1.6fr 1fr;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+}
+
+.nurse-sidebar,
+.nurse-main,
+.nurse-sidepanel {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.nurse-sidebar {
+  padding: 1.5rem;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: var(--shadow);
+}
+
+.nurse-main {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.nurse-sidepanel {
+  padding: 1.5rem;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: var(--shadow);
 }
 
 .monitor-panel {
@@ -532,6 +746,271 @@ button {
   padding: 0.95rem 1.3rem;
   font-weight: 700;
   transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.secondary-button {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text);
+}
+
+.secondary-button:hover,
+.primary-button:hover,
+.action-pill:hover,
+.icon-btn:hover,
+.patient-list-item:hover,
+.view-all-button:hover,
+.tab-pill:hover {
+  transform: translateY(-1px);
+}
+
+.secondary-button.small {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.nurse-dashboard {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.nurse-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nurse-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tab-pill {
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--muted);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.tab-pill.active {
+  color: var(--text);
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.patient-search {
+  padding: 0.85rem 1rem;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  outline: none;
+}
+
+.patient-list-card {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.patient-list-item {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  color: var(--text);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.patient-list-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.patient-list-item.active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.38);
+}
+
+.view-all-button {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--text);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  margin-top: 1rem;
+}
+
+.patient-detail-text {
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+.live-summary-card,
+.live-ecg-card,
+.feed-card,
+.vitals-card,
+.alert-panel {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 24px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.live-summary-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.live-summary-meta h2 {
+  margin: 0;
+}
+
+.live-vitals-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.vitals-stat {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.vitals-stat p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.vitals-stat strong {
+  display: block;
+  margin-top: 0.55rem;
+  font-size: 1.4rem;
+}
+
+.ecg-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+}
+
+.nurse-feed-grid {
+  display: grid;
+  grid-template-columns: 1fr 0.85fr;
+  gap: 1rem;
+}
+
+.feed-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.audio-feed-card {
+  min-height: 360px;
+}
+
+.audio-waveform {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+  align-items: end;
+  height: 220px;
+}
+
+.audio-waveform div {
+  background: linear-gradient(180deg, #38bdf8, rgba(56, 189, 248, 0.35));
+  border-radius: 999px;
+}
+
+.audio-waveform div:nth-child(odd) {
+  height: 40%;
+}
+
+.audio-waveform div:nth-child(even) {
+  height: 65%;
+}
+
+.feed-video {
+  width: 100%;
+  min-height: 260px;
+  border-radius: 20px;
+  object-fit: cover;
+}
+
+.live-pill {
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.18);
+  color: #22c55e;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.nurse-sidepanel {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.vitals-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.vitals-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.alert-status-card {
+  padding: 1rem;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.alert-timestamp {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+@media (max-width: 1120px) {
+  .live-vitals-row,
+  .nurse-feed-grid,
+  .vitals-row,
+  .admin-overview-cards,
+  .overview-panels,
+  .admin-actions-grid,
+  .doctor-grid,
+  .nurse-dashboard,
+  .nurse-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .audio-status-card {
@@ -570,7 +1049,7 @@ button {
   gap: 0.75rem;
   padding: 2rem 1rem;
   border-radius: 22px;
-  background: rgba(15, 23, 42, 0.82);
+  background: rgba(248, 250, 252, 0.92);
   text-align: center;
 }
 
@@ -578,7 +1057,7 @@ button {
   width: 100%;
   border-radius: 20px;
   overflow: hidden;
-  background: #020617;
+  background: #f8fafc;
   aspect-ratio: 16 / 9;
 }
 
@@ -776,8 +1255,8 @@ button {
   align-items: center;
   gap: 0.75rem;
   border-radius: 16px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
   padding: 0.8rem 1rem;
 }
 

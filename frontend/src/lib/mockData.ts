@@ -28,6 +28,11 @@ export const patientList: PatientOverview[] = [
       riskScore: 12,
       status: 'normal',
     },
+    icuId: 'P001',
+    bp: '120/80',
+    respiratoryRate: '16',
+    temperature: '98.6°F',
+    currentAlert: 'None',
     events: [
       { time: '09:15', label: 'Normal', details: 'Stable vitals' },
       { time: '09:42', label: 'Position Check', details: 'Patient repositioned after rest' },
@@ -51,6 +56,11 @@ export const patientList: PatientOverview[] = [
     medications: ['Beta blockers', 'Anticoagulants'],
     allergies: ['None'],
     emergencyContact: 'Rahul Nair — +91 91234 56789',
+    icuId: 'P002',
+    bp: '130/88',
+    respiratoryRate: '18',
+    temperature: '99.2°F',
+    currentAlert: 'Arrhythmia detected',
     vitals: {
       heartRate: 89,
       spo2: 94,
@@ -90,6 +100,11 @@ export const patientList: PatientOverview[] = [
       status: 'critical',
     },
     videoUrl: 'http://127.0.0.1:8001/fall.mp4',
+    icuId: 'P003',
+    bp: '90/60',
+    respiratoryRate: '24',
+    temperature: '100.8°F',
+    currentAlert: 'SpO₂ dropped to 82%',
     events: [
       { time: '09:00', label: 'Critical', details: 'ECG abnormality detected' },
       { time: '09:12', label: 'SpO₂ Low', details: 'SpO₂ dropped to 89%' },
@@ -131,4 +146,44 @@ export const summaryCards = [
   { label: 'Critical Patients', value: 5, accent: 'rose' },
   { label: 'Occupied Beds', value: 38, accent: 'cyan' },
   { label: 'Available Beds', value: 4, accent: 'emerald' },
+]
+
+export const adminOverviewCards = [
+  { label: 'Critical Patients', value: 28, accent: 'rose' },
+  { label: 'Under Observation', value: 146, accent: 'blue' },
+  { label: 'Stable Patients', value: 1074, accent: 'emerald' },
+  { label: 'Active Alerts', value: 12, accent: 'cyan' },
+  { label: 'Staff On Duty', value: 456, accent: 'blue' },
+]
+
+export const wardStatus = [
+  { ward: 'ICU', occupancy: '91%', patients: '22/24', alerts: 5, trend: 'up' },
+  { ward: 'Emergency', occupancy: '82%', patients: '18/22', alerts: 4, trend: 'up' },
+  { ward: 'Neurology', occupancy: '68%', patients: '26/40', alerts: 0, trend: 'stable' },
+  { ward: 'General', occupancy: '54%', patients: '32/60', alerts: 1, trend: 'stable' },
+  { ward: 'Orthopedics', occupancy: '48%', patients: '19/40', alerts: 2, trend: 'down' },
+]
+
+export const adminCriticalAlerts = [
+  { patient: '#103', message: 'SpO₂ dropped to 82%', severity: 'High', time: '10:26 AM' },
+  { patient: '#227', message: 'Fall Detected', severity: 'High', time: '10:23 AM' },
+  { patient: '#145', message: 'Arrhythmia Detected', severity: 'Medium', time: '10:18 AM' },
+  { patient: '#312', message: 'High Heart Rate', severity: 'Medium', time: '10:15 AM' },
+  { patient: '#408', message: 'Nurse Call Pending', severity: 'Low', time: '10:10 AM' },
+]
+
+export const adminCorrelationItems = [
+  { label: 'Speech Abnormality', value: 'Detected', status: 'High' },
+  { label: 'Cough Frequency', value: 'High', status: 'Medium' },
+  { label: 'Heart Rate Spike', value: '120 bpm', status: 'High' },
+  { label: 'SpO₂ Drop', value: '82%', status: 'High' },
+  { label: 'ECG Abnormality', value: 'Irregular Rhythm', status: 'High' },
+]
+
+export const adminQuickActions = [
+  { label: 'Add New Patient' },
+  { label: 'Bed Management' },
+  { label: 'Emergency Broadcast' },
+  { label: 'Code Blue' },
+  { label: 'View All Alerts' },
 ]

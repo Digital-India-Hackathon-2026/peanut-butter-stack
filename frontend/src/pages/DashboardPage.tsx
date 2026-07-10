@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { patientList, alerts, summaryCards } from '../lib/mockData'
+import { patientList, adminOverviewCards, wardStatus, adminCriticalAlerts, adminCorrelationItems, adminQuickActions } from '../lib/mockData'
 import { Sidebar } from '../components/Sidebar'
 import { DashboardHeader } from '../components/DashboardHeader'
 import { StatusCard } from '../components/StatusCard'
-import { AlertCard } from '../components/AlertCard'
 import { FeatureCard } from '../components/FeatureCard'
 
 interface AudioEvent {
@@ -27,6 +26,8 @@ const doctorLineData = [
   { time: '10:00', value: 84 },
   { time: '10:15', value: 77 },
 ]
+
+const nurseTabs = ['Overview', 'Patients', 'Live Monitor', 'AI Correlation', 'Alerts', 'Analytics', 'Reports', 'Administration']
 
 const liveStreamUrl = 'http://127.0.0.1:8000/video-feed'
 
@@ -112,54 +113,127 @@ export function DashboardPage({ role }: DashboardPageProps) {
 
         {role === 'admin' ? (
           <section className="admin-overview">
-            <div className="dashboard-summary admin-summary">
-              {summaryCards.map((card) => (
-                <StatusCard key={card.label} label={card.label} value={String(card.value)} accent={card.accent} />
-              ))}
-            </div>
-            <div className="admin-body">
-              <section className="admin-table-card">
-                <div className="panel-header">
-                  <h2>Patient Monitoring Table</h2>
-                  <p>Track bed status, assigned staff, and risk levels.</p>
-                </div>
-                <div className="data-table">
-                  <div className="table-row header-row">
-                    <span>Patient</span>
-                    <span>Bed</span>
-                    <span>Ward</span>
-                    <span>Doctor</span>
-                    <span>Nurse</span>
-                    <span>Status</span>
-                    <span>Risk</span>
-                    <span>Updated</span>
-                  </div>
-                  {patientList.map((row) => (
-                    <div key={row.id} className="table-row body-row">
-                      <span>{row.name}</span>
-                      <span>{row.bed}</span>
-                      <span>{row.ward}</span>
-                      <span>{row.doctor}</span>
-                      <span>{row.nurse}</span>
-                      <span className={`status-pill small ${row.status}`}>{row.status.replace('-', ' ')}</span>
-                      <span>{row.riskScore}%</span>
-                      <span>2m ago</span>
+            <div className="admin-dashboard-grid">
+              <div className="admin-overview-cards">
+                {adminOverviewCards.map((card) => (
+                  <StatusCard key={card.label} label={card.label} value={String(card.value)} accent={card.accent} />
+                ))}
+              </div>
+              <div className="admin-main-grid">
+                <section className="admin-top-panel">
+                  <div className="panel-header top-panel-header">
+                    <div>
+                      <h2>Dashboard Overview</h2>
+                      <p>High-level status across wards, patient alerts, and AI insights.</p>
                     </div>
-                  ))}
-                </div>
-              </section>
-              <section className="admin-statistics">
-                <div className="panel-header">
-                  <h2>Hospital Statistics</h2>
-                  <p>Operational metrics in real time.</p>
-                </div>
-                <div className="stats-grid">
-                  <FeatureCard title="Critical Cases" value="5" detail="Urgent attention required" />
-                  <FeatureCard title="Falls Detected" value="12" detail="Since morning shift" />
-                  <FeatureCard title="Avg. Response Time" value="4m 12s" detail="From alert to action" />
-                  <FeatureCard title="Bed Occupancy" value="90%" detail="Occupied vs available" />
-                </div>
-              </section>
+                    <div className="dashboard-meta">
+                      <span>May 21, 2025</span>
+                      <span>Morning Shift 07:00 - 15:00</span>
+                    </div>
+                  </div>
+                  <div className="overview-panels">
+                    <div className="ward-status-card">
+                      <div className="panel-header">
+                        <h2>Live Ward Status</h2>
+                        <p>Occupancy and current alerts by ward.</p>
+                      </div>
+                      <div className="ward-table">
+                        {wardStatus.map((ward) => (
+                          <div key={ward.ward} className="ward-row">
+                            <div>
+                              <p className="ward-name">{ward.ward}</p>
+                              <p className="ward-detail">{ward.patients} patients</p>
+                            </div>
+                            <div className="ward-progress-bar">
+                              <div className="ward-progress" style={{ width: ward.occupancy }} />
+                            </div>
+                            <span className={`ward-alerts ${ward.trend}`}>{ward.alerts} alerts</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="alerts-card">
+                      <div className="panel-header">
+                        <h2>Recent Critical Alerts</h2>
+                        <p>Quick access to the most urgent patient issues.</p>
+                      </div>
+                      <div className="alert-list-card">
+                        {adminCriticalAlerts.map((item) => (
+                          <div key={item.patient} className="alert-row">
+                            <div>
+                              <p className="alert-patient">Patient {item.patient}</p>
+                              <p className="alert-message">{item.message}</p>
+                            </div>
+                            <div className="alert-meta">
+                              <span className={`status-pill small ${item.severity === 'High' ? 'critical' : item.severity === 'Medium' ? 'warning' : 'normal'}`}>{item.severity}</span>
+                              <p>{item.time}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="correlation-card">
+                      <div className="panel-header">
+                        <h2>AI Correlation Engine</h2>
+                        <p>Alerts derived from speech, vitals, and patient behavior.</p>
+                      </div>
+                      <div className="correlation-list">
+                        {adminCorrelationItems.map((item) => (
+                          <div key={item.label} className="correlation-row">
+                            <div>
+                              <p className="correlation-label">{item.label}</p>
+                              <p className="correlation-value">{item.value}</p>
+                            </div>
+                            <span className={`status-pill small ${item.status === 'High' ? 'critical' : item.status === 'Medium' ? 'warning' : 'normal'}`}>{item.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section className="admin-actions-grid">
+                  <div className="quick-actions-card">
+                    <div className="panel-header">
+                      <h2>Quick Actions</h2>
+                    </div>
+                    <div className="quick-actions-list">
+                      {adminQuickActions.map((item) => (
+                        <button key={item.label} className="action-pill">{item.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <section className="admin-table-card admin-table-card-wide">
+                    <div className="panel-header">
+                      <h2>Patient Monitoring Table</h2>
+                      <p>Track bed status, assigned staff, and risk levels.</p>
+                    </div>
+                    <div className="data-table">
+                      <div className="table-row header-row">
+                        <span>Patient</span>
+                        <span>Bed</span>
+                        <span>Ward</span>
+                        <span>Doctor</span>
+                        <span>Nurse</span>
+                        <span>Status</span>
+                        <span>Risk</span>
+                        <span>Updated</span>
+                      </div>
+                      {patientList.map((row) => (
+                        <div key={row.id} className="table-row body-row">
+                          <span>{row.name}</span>
+                          <span>{row.bed}</span>
+                          <span>{row.ward}</span>
+                          <span>{row.doctor}</span>
+                          <span>{row.nurse}</span>
+                          <span className={`status-pill small ${row.status}`}>{row.status.replace('-', ' ')}</span>
+                          <span>{row.riskScore}%</span>
+                          <span>2m ago</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </section>
+              </div>
             </div>
           </section>
         ) : role === 'doctor' ? (
@@ -221,124 +295,183 @@ export function DashboardPage({ role }: DashboardPageProps) {
             </div>
           </section>
         ) : (
-          <section className="nurse-grid">
-            <div className="monitor-panel">
-              <div className="monitor-top">
-                <div className="monitor-status-panel">
-                  <h2>Dynamic Monitoring</h2>
-                  <p>Active patient alerts and live observation.</p>
-                </div>
-                <div className="monitor-actions">
-                  <button onClick={() => navigate('/login')} className="secondary-button">Switch Account</button>
-                </div>
+          <section className="nurse-dashboard">
+            <div className="nurse-header-row">
+              <div className="nurse-tabs">
+                {nurseTabs.map((tab) => (
+                  <button key={tab} className={`tab-pill ${tab === 'Live Monitor' ? 'active' : ''}`}>
+                    {tab}
+                  </button>
+                ))}
               </div>
-              <div className="monitor-card live-card">
-                <div className="monitor-hero">
-                  <div className="monitor-badge">Live</div>
-                  <div className="monitor-meta">
-                    <p className="monitor-name">{patient.name}</p>
-                    <p>{patient.bed} · {patient.condition}</p>
-                  </div>
-                </div>
-                {patient.videoUrl ? (
-                  <video
-                    className="monitor-stream"
-                    src={patient.videoUrl}
-                    controls
-                    autoPlay
-                    muted
-                    playsInline
-                    poster="https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=900&q=80"
-                  />
-                ) : (
-                  <img
-                    className="monitor-stream"
-                    src={liveStreamUrl}
-                    alt="Live camera stream"
-                  />
-                )}
-              </div>
-              <div className="vitals-summary">
-                <FeatureCard title="Heart Rate" value={`${patient.vitals.heartRate} bpm`} detail="Current pulse" />
-                <FeatureCard title="SpO₂" value={`${patient.vitals.spo2}%`} detail="Oxygen saturation" />
-                <FeatureCard title="ECG Severity" value={patient.vitals.severity.toUpperCase()} detail="Cardiac alert level" />
-              </div>
-              <div className="audio-status-card">
-                <div className="panel-header">
-                  <h2>Audio Distress Status</h2>
-                  <p>Live microphone detection for the connected room.</p>
-                </div>
-                <div className="audio-status-body">
-                  <span className={`status-pill ${audioEvent.event === 'normal' ? 'normal' : audioEvent.event === 'distress_phrase' || audioEvent.event === 'repeated_distress' ? 'critical' : 'warning'}`}>
-                    {audioEvent.event.replace(/_/g, ' ')}
-                  </span>
-                  <p><strong>Patient:</strong> {audioEvent.patient}</p>
-                  <p><strong>Phrase:</strong> {audioEvent.matched_phrase ?? 'None detected'}</p>
-                  <p><strong>Confidence:</strong> {(audioEvent.confidence * 100).toFixed(0)}%</p>
-                  <p><strong>Updated:</strong> {audioEvent.time}</p>
-                  {audioEvent.error ? <p className="error-text">{audioEvent.error}</p> : null}
-                </div>
-              </div>
+              <button onClick={() => navigate('/login')} className="secondary-button small">Switch Account</button>
             </div>
-            <aside className="alerts-panel">
-              <div className="panel-header">
-                <h2>Current Alerts</h2>
-                <p>Respond to critical events and review alert history.</p>
-              </div>
-              {alerts.map((alert) => (
-                <AlertCard
-                  key={alert.patientId}
-                  patientName={alert.patientName}
-                  bed={alert.bed}
-                  priority={alert.priority}
-                  riskScore={alert.riskScore}
-                  reasons={alert.reasons}
-                  onView={() => setSelectedPatient(alert.patientId)}
-                />
-              ))}
-            </aside>
-            <section className="patient-details-panel">
-              <div className="panel-header">
-                <h2>Patient Details</h2>
-                <p>Comprehensive profile and event timeline.</p>
-              </div>
-              <div className="patient-details-grid">
-                <div className="profile-card">
-                  <p className="profile-title">{patient.name}</p>
-                  <p>{patient.age} years · {patient.gender}</p>
-                  <p>{patient.ward} · Assigned Doctor: {patient.doctor}</p>
-                  <p>{patient.condition}</p>
+            <div className="nurse-grid">
+              <aside className="nurse-sidebar">
+                <div className="panel-header">
+                  <h2>Select Patient</h2>
+                  <p>Choose a monitored room to review live vitals.</p>
                 </div>
-                <div className="profile-card">
-                  <p className="profile-title">Medications</p>
-                  <ul>
-                    {patient.medications.map((med) => <li key={med}>{med}</li>)}
-                  </ul>
+                <div className="patient-search">
+                  <input type="search" placeholder="Search patient, bed, staff..." />
                 </div>
-                <div className="profile-card">
-                  <p className="profile-title">Allergies</p>
-                  <p>{patient.allergies.join(', ')}</p>
-                </div>
-                <div className="profile-card">
-                  <p className="profile-title">Emergency Contact</p>
-                  <p>{patient.emergencyContact}</p>
-                </div>
-              </div>
-              <div className="timeline-card">
-                <p className="profile-title">Recent Events</p>
-                <div className="timeline-list">
-                  {patient.events.map((event) => (
-                    <div key={event.time} className="timeline-item">
-                      <span>{event.time}</span>
+                <div className="patient-list-card">
+                  {patientList.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`patient-list-item ${selectedPatient === item.id ? 'active' : ''}`}
+                      onClick={() => setSelectedPatient(item.id)}
+                    >
                       <div>
-                        <p>{event.label}</p>
-                        <p>{event.details}</p>
+                        <p className="patient-name">{item.name}</p>
+                        <p className="patient-meta">{item.icuId ?? item.id} · {item.bed}</p>
                       </div>
-                    </div>
+                      <span className={`status-pill small ${item.status}`}>{item.status === 'high-risk' ? 'High Risk' : item.status.replace('-', ' ')}</span>
+                    </button>
                   ))}
                 </div>
-              </div>
-            </section>
+                <button className="view-all-button">View all patients</button>
+              </aside>
+
+              <main className="nurse-main">
+                <div className="live-summary-card">
+                  <div className="live-summary-meta">
+                    <div>
+                      <p className="eyebrow">Live Monitor</p>
+                      <h2>{patient.name}</h2>
+                      <p className="patient-detail-text">{patient.icuId ?? patient.id} · {patient.bed} · {patient.condition}</p>
+                    </div>
+                    <span className={`status-pill ${patient.status}`}>{patient.status.replace('-', ' ')}</span>
+                  </div>
+                  <div className="live-vitals-row">
+                    <div className="vitals-stat">
+                      <p>HR</p>
+                      <strong>{patient.vitals.heartRate} bpm</strong>
+                    </div>
+                    <div className="vitals-stat">
+                      <p>SpO₂</p>
+                      <strong>{patient.vitals.spo2}%</strong>
+                    </div>
+                    <div className="vitals-stat">
+                      <p>BP</p>
+                      <strong>{patient.bp ?? 'N/A'}</strong>
+                    </div>
+                    <div className="vitals-stat">
+                      <p>Temp</p>
+                      <strong>{patient.temperature ?? 'N/A'}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="live-ecg-card">
+                  <div className="panel-header">
+                    <h2>Live ECG</h2>
+                    <div className="ecg-header-right">
+                      <span>130 bpm</span>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <LineChart data={doctorLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#30415622" />
+                      <XAxis dataKey="time" tick={{ fill: '#a8b4cf', fontSize: 12 }} />
+                      <YAxis tick={{ fill: '#a8b4cf', fontSize: 12 }} />
+                      <Tooltip contentStyle={{ background: '#0f172a', border: 'none', color: '#fff' }} />
+                      <Line type="monotone" dataKey="value" stroke="#38bdf8" strokeWidth={3} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="nurse-feed-grid">
+                  <div className="feed-card">
+                    <div className="panel-header">
+                      <h2>Camera Feed</h2>
+                      <span className="live-pill">Live</span>
+                    </div>
+                    {patient.videoUrl ? (
+                      <video className="feed-video" src={patient.videoUrl} controls autoPlay muted playsInline />
+                    ) : (
+                      <img className="feed-video" src={liveStreamUrl} alt="Live feed" />
+                    )}
+                  </div>
+                  <div className="feed-card audio-feed-card">
+                    <div className="panel-header">
+                      <h2>Audio Feed</h2>
+                      <span className="live-pill">Live</span>
+                    </div>
+                    <div className="audio-waveform">
+                      <div />
+                      <div />
+                      <div />
+                      <div />
+                      <div />
+                      <div />
+                    </div>
+                  </div>
+                </div>
+              </main>
+
+              <aside className="nurse-sidepanel">
+                <div className="vitals-card">
+                  <div className="panel-header">
+                    <h2>Live Vitals</h2>
+                  </div>
+                  <div className="vitals-panel">
+                    <div className="vitals-row">
+                      <div>
+                        <p>Heart Rate</p>
+                        <strong>{patient.vitals.heartRate} bpm</strong>
+                      </div>
+                      <div>
+                        <p>SpO₂</p>
+                        <strong>{patient.vitals.spo2}%</strong>
+                      </div>
+                    </div>
+                    <div className="vitals-row">
+                      <div>
+                        <p>Blood Pressure</p>
+                        <strong>{patient.bp ?? 'N/A'}</strong>
+                      </div>
+                      <div>
+                        <p>Respiratory Rate</p>
+                        <strong>{patient.respiratoryRate ?? 'N/A'} /min</strong>
+                      </div>
+                    </div>
+                    <div className="vitals-row">
+                      <div>
+                        <p>Temperature</p>
+                        <strong>{patient.temperature ?? 'N/A'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="audio-status-card">
+                  <div className="panel-header">
+                    <h2>Audio Status</h2>
+                  </div>
+                  <div className="audio-status-body">
+                    <span className={`status-pill ${audioEvent.event === 'normal' ? 'normal' : audioEvent.event.includes('distress') ? 'critical' : 'warning'}`}>
+                      {audioEvent.event.replace(/_/g, ' ')}
+                    </span>
+                    <p><strong>Patient:</strong> {audioEvent.patient}</p>
+                    <p><strong>Detected phrase:</strong> {audioEvent.matched_phrase ?? 'None'}</p>
+                    <p><strong>Confidence:</strong> {(audioEvent.confidence * 100).toFixed(0)}%</p>
+                    <p><strong>Last update:</strong> {audioEvent.time}</p>
+                    {audioEvent.error ? <p className="error-text">{audioEvent.error}</p> : null}
+                  </div>
+                </div>
+                <div className="alert-panel">
+                  <div className="panel-header">
+                    <h2>Current Alert</h2>
+                  </div>
+                  <div className="alert-status-card">
+                    <p>{patient.currentAlert ?? 'No active alert'}</p>
+                    <span className="status-pill critical">High</span>
+                    <p className="alert-timestamp">10:20 AM</p>
+                  </div>
+                  <button className="primary-button full-width">Acknowledge Alert</button>
+                </div>
+              </aside>
+            </div>
           </section>
         )}
       </main>
