@@ -29,7 +29,7 @@ const doctorLineData = [
 
 const nurseTabs = ['Overview', 'Patients', 'Live Monitor', 'AI Correlation', 'Alerts', 'Analytics', 'Reports', 'Administration']
 
-const liveStreamUrl = 'http://127.0.0.1:8000/video-feed'
+const liveStreamUrl = '/video-feed'
 
 interface DashboardPageProps {
   role: 'nurse' | 'doctor' | 'admin'
