@@ -89,6 +89,34 @@ async def health() -> dict[str, str]:
     }
 
 
+@app.get("/monitor")
+async def monitor() -> str:
+    return """
+    <!DOCTYPE html>
+    <html lang=\"en\">
+    <head>
+      <meta charset=\"UTF-8\" />
+      <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+      <title>VitalGuard Live Monitor</title>
+      <style>
+        body { margin: 0; background: #0b1220; color: #f8fafc; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        h1 { margin: 20px 0 10px; }
+        .feed { border: 4px solid #334155; border-radius: 14px; background: #000; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35); }
+        img, video { display: block; max-width: 90vw; max-height: 80vh; border-radius: 12px; }
+        .note { margin-top: 16px; color: #94a3b8; max-width: 640px; text-align: center; }
+      </style>
+    </head>
+    <body>
+      <h1>VitalGuard Live Monitor</h1>
+      <div class=\"feed\">
+        <img src=\"/video-feed\" alt=\"Live webcam feed\" />
+      </div>
+      <p class=\"note\">If the feed does not appear, make sure the FastAPI server is running. If no webcam is available, it will automatically play the fallback sample video.</p>
+    </body>
+    </html>
+    """
+
+
 @app.get("/video-feed")
 async def video_feed() -> StreamingResponse:
     return StreamingResponse(

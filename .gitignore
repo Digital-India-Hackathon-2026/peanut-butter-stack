@@ -1,0 +1,17 @@
+# Node modules
+node_modules
+
+# Frontend build artifacts
+frontend/dist/
+frontend/node_modules/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+.venv/
+
+# Video/demo artifacts
+fall detection/*.mp4
+fall detection/*.png
+fall detection/*.html
+video_monitoring/__pycache__/

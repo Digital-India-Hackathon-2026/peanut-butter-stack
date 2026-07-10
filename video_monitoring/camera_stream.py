@@ -15,6 +15,7 @@ import numpy as np
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT_DIR = SCRIPT_DIR.parent
 FALL_DETECTION_DIR = ROOT_DIR / "fall detection"
+SAMPLE_VIDEO_PATH = FALL_DETECTION_DIR / "fall.mp4"
 
 if str(FALL_DETECTION_DIR) not in sys.path:
     sys.path.insert(0, str(FALL_DETECTION_DIR))
@@ -25,11 +26,13 @@ logger = logging.getLogger(__name__)
 
 
 def resolve_video_source(raw_source: int | str) -> int | str:
-    """Convert numeric strings to camera indices; leave file paths untouched."""
+    """Convert numeric strings to camera indices and named demo sources to sample files."""
     if isinstance(raw_source, int):
         return raw_source
 
     source_text = str(raw_source).strip()
+    if source_text.lower() in {"sample", "demo", "fallback"}:
+        return str(SAMPLE_VIDEO_PATH)
     if source_text.lstrip("-").isdigit():
         return int(source_text)
     return source_text
@@ -43,6 +46,15 @@ class CameraStream:
         self._source_label = f"webcam {source}" if isinstance(source, int) else str(source)
         self._should_loop = isinstance(source, str)
         self._capture = cv2.VideoCapture(source)
+
+        if not self._capture.isOpened() and isinstance(source, int):
+            fallback_source = str(SAMPLE_VIDEO_PATH)
+            logger.warning("Webcam %r unavailable, falling back to sample video %r", source, fallback_source)
+            self.source = fallback_source
+            self._source_label = fallback_source
+            self._should_loop = True
+            self._capture = cv2.VideoCapture(self.source)
+
         if not self._capture.isOpened():
             raise RuntimeError(f"Could not open video source: {source!r}")
 
