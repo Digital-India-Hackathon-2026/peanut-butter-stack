@@ -9,14 +9,24 @@ import { FeatureCard } from '../components/FeatureCard'
 
 interface AudioEvent {
   patient: string
+  patient_name: string | null
+  doctor: string | null
+  doctor_notified: boolean
   event: string
+  severity: 'normal' | 'warning' | 'critical'
   confidence: number
   matched_phrase: string | null
+  transcript: string | null
   time: string
   error?: string
 }
 
 const patientDetails = patientList[0]
+const defaultAudioPatient = {
+  id: 'ICU-10',
+  name: 'Devika Nair',
+  doctor: 'Dr. Sushma Iyer',
+}
 
 const doctorLineData = [
   { time: '09:00', value: 72 },
@@ -38,10 +48,15 @@ interface DashboardPageProps {
 export function DashboardPage({ role }: DashboardPageProps) {
   const [selectedPatient, setSelectedPatient] = useState(patientList[0].id)
   const [audioEvent, setAudioEvent] = useState<AudioEvent>({
-    patient: 'ICU-12',
+    patient: defaultAudioPatient.id,
+    patient_name: defaultAudioPatient.name,
+    doctor: defaultAudioPatient.doctor,
+    doctor_notified: false,
     event: 'normal',
+    severity: 'normal',
     confidence: 0,
     matched_phrase: null,
+    transcript: null,
     time: '--',
   })
   const navigate = useNavigate()
@@ -65,10 +80,15 @@ export function DashboardPage({ role }: DashboardPageProps) {
       try {
         const payload = JSON.parse(event.data)
         setAudioEvent({
-          patient: payload.patient ?? 'ICU-12',
+          patient: payload.patient ?? defaultAudioPatient.id,
+          patient_name: payload.patient_name ?? defaultAudioPatient.name,
+          doctor: payload.doctor ?? defaultAudioPatient.doctor,
+          doctor_notified: Boolean(payload.doctor_notified),
           event: payload.event ?? 'normal',
+          severity: payload.severity ?? (payload.event?.includes('distress') ? 'critical' : payload.event === 'loud_vocalization' ? 'warning' : 'normal'),
           confidence: payload.confidence ?? 0,
           matched_phrase: payload.matched_phrase ?? null,
+          transcript: payload.transcript ?? null,
           time: payload.time ?? '--',
           error: payload.error,
         })
@@ -444,18 +464,35 @@ export function DashboardPage({ role }: DashboardPageProps) {
                     </div>
                   </div>
                 </div>
-                <div className="audio-status-card">
+                <div className={`audio-status-card ${audioEvent.severity === 'critical' ? 'audio-status-card--critical' : ''}`}>
                   <div className="panel-header">
                     <h2>Audio Status</h2>
                   </div>
                   <div className="audio-status-body">
-                    <span className={`status-pill ${audioEvent.event === 'normal' ? 'normal' : audioEvent.event.includes('distress') ? 'critical' : 'warning'}`}>
-                      {audioEvent.event.replace(/_/g, ' ')}
-                    </span>
-                    <p><strong>Patient:</strong> {audioEvent.patient}</p>
-                    <p><strong>Detected phrase:</strong> {audioEvent.matched_phrase ?? 'None'}</p>
-                    <p><strong>Confidence:</strong> {(audioEvent.confidence * 100).toFixed(0)}%</p>
-                    <p><strong>Last update:</strong> {audioEvent.time}</p>
+                    <div className="audio-status-hero">
+                      <div>
+                        <span className={`status-pill ${audioEvent.severity}`}>
+                          {audioEvent.severity.toUpperCase()}
+                        </span>
+                        <p className="audio-status-target">Critical patient focus</p>
+                        <h3>{audioEvent.patient_name ?? defaultAudioPatient.name}</h3>
+                        <p className="audio-status-id">{audioEvent.patient} · doctor {audioEvent.doctor ?? defaultAudioPatient.doctor}</p>
+                      </div>
+                      <div className="audio-status-score">
+                        <span>Confidence</span>
+                        <strong>{(audioEvent.confidence * 100).toFixed(0)}%</strong>
+                      </div>
+                    </div>
+                    <div className="audio-status-transcript">
+                      <span className="audio-status-label">Speech to text</span>
+                      <p>{audioEvent.transcript ?? 'Waiting for live speech input...'}</p>
+                    </div>
+                    <div className="audio-status-meta">
+                      <p><strong>Assigned audio patient:</strong> {audioEvent.patient_name ?? 'Unknown'} ({audioEvent.patient})</p>
+                      <p><strong>Notified doctor:</strong> {audioEvent.doctor ?? 'Unknown'} {audioEvent.doctor_notified ? '(sent)' : '(pending)'}</p>
+                      <p><strong>Detected phrase:</strong> {audioEvent.matched_phrase ?? 'None'}</p>
+                      <p><strong>Last update:</strong> {audioEvent.time}</p>
+                    </div>
                     {audioEvent.error ? <p className="error-text">{audioEvent.error}</p> : null}
                   </div>
                 </div>

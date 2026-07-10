@@ -28,6 +28,10 @@ from audio_monitoring.speech_to_text import SpeechTranscriber
 
 app = FastAPI(title="VitalGuard Audio Monitoring")
 
+AUDIO_PATIENT_ID = "ICU-10"
+AUDIO_PATIENT_NAME = "Devika Nair"
+AUDIO_PATIENT_DOCTOR = "Dr. Sushma Iyer"
+
 
 @app.get("/health")
 async def health() -> dict[str, str]:
@@ -42,6 +46,7 @@ async def health() -> dict[str, str]:
 class AudioEventState:
     event: str = "normal"
     matched_phrase: Optional[str] = None
+    transcript: Optional[str] = None
 
 
 class MicAudioStreamer:
@@ -102,7 +107,7 @@ async def websocket_audio_events(websocket: WebSocket) -> None:
     quiet_rms_history: Deque[float] = deque()
     baseline_rms = 0.0
     state = AudioEventState()
-    patient_id = "ICU-12"
+    patient_id = AUDIO_PATIENT_ID
 
     try:
         async with MicAudioStreamer() as mic_stream:
@@ -123,29 +128,42 @@ async def websocket_audio_events(websocket: WebSocket) -> None:
                 event = "normal"
                 confidence = 0.0
                 matched_phrase = None
+                severity = "normal"
 
                 if repeated_distress:
                     event = "repeated_distress"
                     confidence = 0.95
                     matched_phrase = phrase_result["matched_phrase"]
+                    severity = "critical"
                 elif phrase_detected:
                     event = "distress_phrase"
                     confidence = 0.85
                     matched_phrase = phrase_result["matched_phrase"]
+                    severity = "critical"
                 elif volume_spike:
                     event = "loud_vocalization"
                     confidence = 0.35
+                    severity = "warning"
 
-                if event != state.event or matched_phrase != state.matched_phrase:
+                if (
+                    event != state.event
+                    or matched_phrase != state.matched_phrase
+                    or transcript != state.transcript
+                ):
                     payload = {
                         "patient": patient_id,
+                        "patient_name": AUDIO_PATIENT_NAME,
+                        "doctor": AUDIO_PATIENT_DOCTOR,
+                        "doctor_notified": True,
                         "event": event,
+                        "severity": severity,
                         "confidence": confidence,
                         "matched_phrase": matched_phrase,
+                        "transcript": transcript,
                         "time": datetime.now(timezone.utc).isoformat(),
                     }
                     await websocket.send_text(json.dumps(payload))
-                    state = AudioEventState(event=event, matched_phrase=matched_phrase)
+                    state = AudioEventState(event=event, matched_phrase=matched_phrase, transcript=transcript)
     except WebSocketDisconnect:
         return
     except Exception as exc:  # pragma: no cover - runtime safety
@@ -153,9 +171,14 @@ async def websocket_audio_events(websocket: WebSocket) -> None:
             json.dumps(
                 {
                     "patient": patient_id,
+                    "patient_name": AUDIO_PATIENT_NAME,
+                    "doctor": AUDIO_PATIENT_DOCTOR,
+                    "doctor_notified": True,
                     "event": "normal",
+                    "severity": "normal",
                     "confidence": 0.0,
                     "matched_phrase": None,
+                    "transcript": None,
                     "time": datetime.now(timezone.utc).isoformat(),
                     "error": str(exc),
                 }
