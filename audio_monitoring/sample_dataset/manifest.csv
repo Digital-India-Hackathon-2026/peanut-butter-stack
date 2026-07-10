@@ -1,0 +1,6 @@
+"file","label","transcript"
+"help.wav","distress_phrase","Help. Please help me."
+"cant_breathe.wav","distress_phrase","I can not breathe."
+"chest_pain.wav","distress_phrase","Chest pain. Call the nurse."
+"it_hurts.wav","distress_phrase","It hurts. It hurts badly."
+"normal_speech.wav","normal","I am feeling okay right now."

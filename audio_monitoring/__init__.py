@@ -1,0 +1,1 @@
+"""VitalGuard audio monitoring package."""

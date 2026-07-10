@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { patientList, alerts, summaryCards } from '../lib/mockData'
@@ -7,6 +7,15 @@ import { DashboardHeader } from '../components/DashboardHeader'
 import { StatusCard } from '../components/StatusCard'
 import { AlertCard } from '../components/AlertCard'
 import { FeatureCard } from '../components/FeatureCard'
+
+interface AudioEvent {
+  patient: string
+  event: string
+  confidence: number
+  matched_phrase: string | null
+  time: string
+  error?: string
+}
 
 const patientDetails = patientList[0]
 
@@ -27,6 +36,13 @@ interface DashboardPageProps {
 
 export function DashboardPage({ role }: DashboardPageProps) {
   const [selectedPatient, setSelectedPatient] = useState(patientList[0].id)
+  const [audioEvent, setAudioEvent] = useState<AudioEvent>({
+    patient: 'ICU-12',
+    event: 'normal',
+    confidence: 0,
+    matched_phrase: null,
+    time: '--',
+  })
   const navigate = useNavigate()
   const patient = useMemo(
     () => patientList.find((item) => item.id === selectedPatient) ?? patientDetails,
@@ -36,6 +52,46 @@ export function DashboardPage({ role }: DashboardPageProps) {
     () => patientList.filter((item) => item.status === 'critical' || item.status === 'high-risk'),
     [],
   )
+
+  useEffect(() => {
+    if (role !== 'nurse') {
+      return
+    }
+
+    const socket = new WebSocket('ws://127.0.0.1:8000/audio/ws/audio-events')
+
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data)
+        setAudioEvent({
+          patient: payload.patient ?? 'ICU-12',
+          event: payload.event ?? 'normal',
+          confidence: payload.confidence ?? 0,
+          matched_phrase: payload.matched_phrase ?? null,
+          time: payload.time ?? '--',
+          error: payload.error,
+        })
+      } catch {
+        setAudioEvent((previous) => ({
+          ...previous,
+          error: 'Invalid audio websocket message',
+        }))
+      }
+    }
+
+    socket.onerror = () => {
+      setAudioEvent((previous) => ({
+        ...previous,
+        error: 'Audio websocket connection failed',
+      }))
+    }
+
+    return () => {
+      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+        socket.close()
+      }
+    }
+  }, [role])
 
   return (
     <div className="dashboard-layout">
@@ -206,6 +262,22 @@ export function DashboardPage({ role }: DashboardPageProps) {
                 <FeatureCard title="Heart Rate" value={`${patient.vitals.heartRate} bpm`} detail="Current pulse" />
                 <FeatureCard title="SpO₂" value={`${patient.vitals.spo2}%`} detail="Oxygen saturation" />
                 <FeatureCard title="ECG Severity" value={patient.vitals.severity.toUpperCase()} detail="Cardiac alert level" />
+              </div>
+              <div className="audio-status-card">
+                <div className="panel-header">
+                  <h2>Audio Distress Status</h2>
+                  <p>Live microphone detection for the connected room.</p>
+                </div>
+                <div className="audio-status-body">
+                  <span className={`status-pill ${audioEvent.event === 'normal' ? 'normal' : audioEvent.event === 'distress_phrase' || audioEvent.event === 'repeated_distress' ? 'critical' : 'warning'}`}>
+                    {audioEvent.event.replace(/_/g, ' ')}
+                  </span>
+                  <p><strong>Patient:</strong> {audioEvent.patient}</p>
+                  <p><strong>Phrase:</strong> {audioEvent.matched_phrase ?? 'None detected'}</p>
+                  <p><strong>Confidence:</strong> {(audioEvent.confidence * 100).toFixed(0)}%</p>
+                  <p><strong>Updated:</strong> {audioEvent.time}</p>
+                  {audioEvent.error ? <p className="error-text">{audioEvent.error}</p> : null}
+                </div>
               </div>
             </div>
             <aside className="alerts-panel">

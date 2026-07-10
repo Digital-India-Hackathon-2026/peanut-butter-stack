@@ -534,17 +534,24 @@ button {
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
-.secondary-button {
-  background: rgba(15, 23, 42, 0.95);
-  color: #dbeafe;
-  border: 1px solid rgba(56, 189, 248, 0.18);
+.audio-status-card {
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 22px;
+  min-height: 220px;
 }
 
-.secondary-button:hover,
-.primary-button:hover {
-  transform: translateY(-1px);
+.audio-status-body {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
+.error-text {
+  color: #fca5a5;
+  font-size: 0.95rem;
+}
 .primary-button {
   background: #2563eb;
   color: #fff;
