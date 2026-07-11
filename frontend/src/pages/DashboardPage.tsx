@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { ArrowUpRight, ShieldCheck, Search } from 'lucide-react'
+import { logout } from '../lib/auth'
 import { patientList, adminOverviewCards, wardStatus, adminCriticalAlerts, adminCorrelationItems, adminQuickActions } from '../lib/mockData'
 import { Sidebar } from '../components/Sidebar'
 import { DashboardHeader } from '../components/DashboardHeader'
@@ -28,6 +30,8 @@ const defaultAudioPatient = {
   doctor: 'Dr. Sushma Iyer',
 }
 
+const devikaDefaultPatientId = patientList.find((item) => item.name === 'Devika Nair')?.id ?? patientList[0].id
+
 const doctorLineData = [
   { time: '09:00', value: 72 },
   { time: '09:15', value: 78 },
@@ -38,6 +42,7 @@ const doctorLineData = [
 ]
 
 const nurseTabs = ['Overview', 'Patients', 'Live Monitor', 'AI Correlation', 'Alerts', 'Analytics', 'Reports', 'Administration']
+const doctorTabs = ['Dashboard', 'Patients', 'Live Monitor', 'Reports', 'Settings']
 
 const liveStreamUrl = '/video-feed'
 
@@ -46,7 +51,12 @@ interface DashboardPageProps {
 }
 
 export function DashboardPage({ role }: DashboardPageProps) {
-  const [selectedPatient, setSelectedPatient] = useState(patientList[0].id)
+  const [selectedPatient, setSelectedPatient] = useState(devikaDefaultPatientId)
+  const [activeDoctorTab, setActiveDoctorTab] = useState('Live Monitor')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [userEmail] = useState('doctor@example.com')
   const [audioEvent, setAudioEvent] = useState<AudioEvent>({
     patient: defaultAudioPatient.id,
     patient_name: defaultAudioPatient.name,
@@ -69,13 +79,417 @@ export function DashboardPage({ role }: DashboardPageProps) {
     [],
   )
 
+  const filteredPatientList = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) {
+      return patientList
+    }
+    return patientList.filter((item) =>
+      [item.name, item.condition, item.ward, item.bed].some((field) =>
+        field.toLowerCase().includes(query),
+      ),
+    )
+  }, [searchQuery])
+
+  const userInitials = useMemo(() => {
+    const prefix = userEmail.split('@')[0]
+    const pieces = prefix.replace(/[^a-zA-Z0-9]+/g, ' ').trim().split(' ').filter(Boolean)
+    if (pieces.length === 0) return 'DR'
+    if (pieces.length === 1) return pieces[0].slice(0, 2).toUpperCase()
+    return `${pieces[0][0]}${pieces[1][0]}`.toUpperCase()
+  }, [userEmail])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const renderDoctorTabContent = () => {
+    if (activeDoctorTab === 'Patients') {
+      return (
+        <section className="doctor-panel doctor-list-panel">
+          <div className="panel-header doctor-panel-header">
+            <div>
+              <h2>Patient directory</h2>
+              <p>Browse all patients assigned to the hospital.</p>
+            </div>
+          </div>
+          <div className="critical-list">
+            {filteredPatientList.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`critical-card ${selectedPatient === item.id ? 'active' : ''}`}
+                onClick={() => setSelectedPatient(item.id)}
+              >
+                <div className="critical-card-top">
+                  <div>
+                    <p className="critical-name">{item.name}</p>
+                    <p className="critical-meta">{item.bed} · {item.ward}</p>
+                  </div>
+                  <span className={`status-pill small ${item.status}`}>{item.status.replace('-', ' ')}</span>
+                </div>
+                <div className="critical-card-bottom">
+                  <span>Risk {item.riskScore}%</span>
+                  <span>{item.condition}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    if (activeDoctorTab === 'Live Monitor') {
+      return (
+        <section className="doctor-grid">
+          <div className="doctor-left">
+            <section className="doctor-panel doctor-monitor-panel">
+              <div className="monitor-hero">
+                <div className="monitor-badge">Live Monitor</div>
+                <div className="monitor-meta">
+                  <p className="monitor-name">{patient.name}</p>
+                  <p>{patient.bed} · {patient.condition}</p>
+                </div>
+              </div>
+              <div className="doctor-metrics">
+                <FeatureCard title="Heart Rate" value={`${patient.latestHR ?? patient.vitals.heartRate} bpm`} detail="Current bedside reading" />
+                <FeatureCard title="SpO₂" value={`${patient.latestSpO2 ?? patient.vitals.spo2}%`} detail="Oxygen saturation" />
+                <FeatureCard title="Risk Score" value={`${patient.riskScore}%`} detail="Critical care" />
+              </div>
+              <div className="doctor-video-card">
+                <div className="panel-header doctor-panel-header">
+                  <div>
+                    <h2>Live monitoring video</h2>
+                    <p>Watch the selected patient's bedside feed.</p>
+                  </div>
+                  <span className="live-pill">Live</span>
+                </div>
+                {patient.videoUrl ? (
+                  <video className="feed-video" src={patient.videoUrl} controls autoPlay muted playsInline />
+                ) : (
+                  <img className="feed-video" src={liveStreamUrl} alt="Live feed" />
+                )}
+              </div>
+              <div className="chart-card">
+                <p className="chart-title">Live Trend</p>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={doctorLineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ef" />
+                    <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a' }} />
+                    <Line type="monotone" dataKey="value" stroke="#0f4c81" strokeWidth={3} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
+          </div>
+
+          <div className="doctor-right">
+            <section className="doctor-panel doctor-summary-panel">
+              <div className="panel-header doctor-panel-header">
+                <div>
+                  <h2>Patient overview</h2>
+                  <p>Live vital stats and current condition for the selected patient.</p>
+                </div>
+              </div>
+              <div className="doctor-notes-grid">
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Last update</span>
+                  <strong>1 min ago</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Primary doctor</span>
+                  <strong>{patient.doctor}</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Nurse</span>
+                  <strong>{patient.nurse}</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Bed</span>
+                  <strong>{patient.bed}</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      )
+    }
+
+    if (activeDoctorTab === 'Reports') {
+      return (
+        <section className="doctor-grid">
+          <div className="doctor-left">
+            <section className="doctor-panel doctor-summary-panel">
+              <div className="panel-header doctor-panel-header">
+                <div>
+                  <h2>Clinical reports</h2>
+                  <p>Summary of recent findings and performance indicators.</p>
+                </div>
+              </div>
+              <div className="doctor-notes-grid">
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Risk assessment</span>
+                  <strong>{patient.riskScore}%</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">ECG status</span>
+                  <strong>{patient.status === 'critical' ? 'Review needed' : 'Stable'}</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Oxygen trend</span>
+                  <strong>{(patient.latestSpO2 ?? patient.vitals.spo2) < 94 ? 'Declining' : 'Stable'}</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Respiratory rate</span>
+                  <strong>{patient.respiratoryRate ?? '16 rpm'}</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="doctor-right">
+            <section className="doctor-panel doctor-monitor-panel">
+              <div className="monitor-hero">
+                <div className="monitor-badge">Report</div>
+                <div className="monitor-meta">
+                  <p className="monitor-name">Report overview</p>
+                  <p>Data snapshot and trends</p>
+                </div>
+              </div>
+              <div className="doctor-metrics">
+                <FeatureCard title="Avg. SpO₂" value="97%" detail="Past 24 hours" />
+                <FeatureCard title="Avg. HR" value="78 bpm" detail="Past 24 hours" />
+                <FeatureCard title="Alerts" value="2" detail="Critical incidents" />
+              </div>
+              <div className="chart-card">
+                <p className="chart-title">Recovery trend</p>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={doctorLineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ef" />
+                    <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a' }} />
+                    <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
+          </div>
+        </section>
+      )
+    }
+
+    if (activeDoctorTab === 'Settings') {
+      return (
+        <section className="doctor-grid">
+          <div className="doctor-left">
+            <section className="doctor-panel doctor-summary-panel">
+              <div className="panel-header doctor-panel-header">
+                <div>
+                  <h2>Workspace settings</h2>
+                  <p>Configure your doctor console preferences.</p>
+                </div>
+              </div>
+              <div className="doctor-settings-grid">
+                <button type="button" className="doctor-settings-card">Notification preferences</button>
+                <button type="button" className="doctor-settings-card">Display theme</button>
+                <button type="button" className="doctor-settings-card">Search filters</button>
+                <button type="button" className="doctor-settings-card">Patient grouping</button>
+              </div>
+            </section>
+          </div>
+
+          <div className="doctor-right">
+            <section className="doctor-panel doctor-monitor-panel">
+              <div className="monitor-hero">
+                <div className="monitor-badge">Settings</div>
+                <div className="monitor-meta">
+                  <p className="monitor-name">Console preferences</p>
+                  <p>Tune your dashboard controls.</p>
+                </div>
+              </div>
+              <div className="doctor-metrics">
+                <FeatureCard title="Auto-refresh" value="On" detail="Live patient data" />
+                <FeatureCard title="Alerts" value="Enabled" detail="High-priority only" />
+                <FeatureCard title="Dark mode" value="Off" detail="Switch theme" />
+              </div>
+              <div className="chart-card">
+                <p className="chart-title">Recent activity</p>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={doctorLineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ef" />
+                    <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a' }} />
+                    <Line type="monotone" dataKey="value" stroke="#0f4c81" strokeWidth={3} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
+          </div>
+        </section>
+      )
+    }
+
+    return (
+      <>
+        <section className="doctor-hero">
+          <div>
+            <p className="doctor-breadcrumb">Doctor Console / Critical Review</p>
+            <h1>High-acuity patient review</h1>
+            <p className="doctor-subtitle">
+              Review critical cases, follow live ECG trends, and act on the latest bedside alerts from one clear workspace.
+            </p>
+          </div>
+          <div className="doctor-hero-actions">
+            <button type="button" className="secondary-button small">Export Summary</button>
+            <button type="button" className="primary-button admin-primary-action">
+              <ArrowUpRight size={15} />
+              Review Alerts
+            </button>
+          </div>
+        </section>
+
+        <section className="doctor-metrics-grid">
+          <article className="doctor-metric-card">
+            <span className="doctor-metric-label">Critical Cases</span>
+            <strong>{criticalPatients.length}</strong>
+            <p>Active patients requiring direct review.</p>
+          </article>
+          <article className="doctor-metric-card">
+            <span className="doctor-metric-label">Selected Risk</span>
+            <strong>{patient.riskScore}%</strong>
+            <p>{patient.condition}</p>
+          </article>
+          <article className="doctor-metric-card">
+            <span className="doctor-metric-label">SpO₂</span>
+            <strong>{patient.latestSpO2 ?? patient.vitals.spo2}%</strong>
+            <p>{(patient.latestSpO2 ?? patient.vitals.spo2) < 94 ? 'Needs attention' : 'Within range'}</p>
+          </article>
+          <article className="doctor-metric-card">
+            <span className="doctor-metric-label">Heart Rate</span>
+            <strong>{patient.latestHR ?? patient.vitals.heartRate} bpm</strong>
+            <p>Latest recorded value</p>
+          </article>
+        </section>
+
+        <section className="doctor-grid">
+          <div className="doctor-left">
+            <section className="doctor-panel doctor-list-panel">
+              <div className="panel-header doctor-panel-header">
+                <div>
+                  <h2>Critical patient list</h2>
+                  <p>Review only the active high-priority cases.</p>
+                </div>
+                <span className="panel-header-meta">{criticalPatients.length} cases</span>
+              </div>
+              <div className="critical-list">
+                {criticalPatients.map((item) => (
+                  <button key={item.id} type="button" className={`critical-card ${selectedPatient === item.id ? 'active' : ''}`} onClick={() => setSelectedPatient(item.id)}>
+                    <div className="critical-card-top">
+                      <div>
+                        <p className="critical-name">{item.name}</p>
+                        <p className="critical-meta">{item.bed} · {item.ward}</p>
+                      </div>
+                      <span className={`status-pill small ${item.status}`}>{item.status.replace('-', ' ')}</span>
+                    </div>
+                    <div className="critical-card-bottom">
+                      <span>Risk {item.riskScore}%</span>
+                      <span>{item.condition}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="doctor-panel doctor-summary-panel">
+              <div className="panel-header doctor-panel-header">
+                <div>
+                  <h2>Medical summary</h2>
+                  <p>Clinical context for the selected patient.</p>
+                </div>
+              </div>
+              <p className="doctor-summary-text">
+                {patient.name} is under close observation for {patient.condition.toLowerCase()}. SpO₂, ECG, and risk signals remain the priority for the current review cycle.
+              </p>
+              <div className="summary-tags doctor-summary-tags">
+                <span>ECG Abnormal</span>
+                <span>SpO₂ Low</span>
+                <span>Risk {patient.riskScore}%</span>
+              </div>
+            </section>
+          </div>
+
+          <div className="doctor-right">
+            <section className="doctor-panel doctor-monitor-panel">
+              <div className="monitor-hero">
+                <div className="monitor-badge">Review</div>
+                <div className="monitor-meta">
+                  <p className="monitor-name">{patient.name}</p>
+                  <p>{patient.bed} · {patient.condition}</p>
+                </div>
+              </div>
+              <div className="doctor-metrics">
+                <FeatureCard title="Heart Rate" value={`${patient.latestHR ?? patient.vitals.heartRate} bpm`} detail="Current bedside reading" />
+                <FeatureCard title="SpO₂" value={`${patient.latestSpO2 ?? patient.vitals.spo2}%`} detail="Oxygen saturation" />
+                <FeatureCard title="Risk Score" value={`${patient.riskScore}%`} detail="Critical care" />
+              </div>
+              <div className="chart-card">
+                <p className="chart-title">ECG Trend</p>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={doctorLineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ef" />
+                    <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a' }} />
+                    <Line type="monotone" dataKey="value" stroke="#0f4c81" strokeWidth={3} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
+
+            <section className="doctor-panel doctor-notes-panel">
+              <div className="panel-header doctor-panel-header">
+                <div>
+                  <h2>Clinical notes</h2>
+                  <p>Most recent findings and recommended attention areas.</p>
+                </div>
+              </div>
+              <div className="doctor-notes-grid">
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Doctor</span>
+                  <strong>{patient.doctor}</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Nurse</span>
+                  <strong>{patient.nurse}</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Ward</span>
+                  <strong>{patient.ward}</strong>
+                </div>
+                <div className="doctor-note-item">
+                  <span className="doctor-note-label">Latest Alert</span>
+                  <strong>{patient.currentAlert ?? 'No active alert'}</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </>
+    )
+  }
+
   useEffect(() => {
     if (role !== 'nurse') {
       return
     }
 
     const socket = new WebSocket('ws://127.0.0.1:8000/audio/ws/audio-events')
-
+    
     socket.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data)
@@ -115,23 +529,106 @@ export function DashboardPage({ role }: DashboardPageProps) {
   }, [role])
 
   return (
-    <div className="dashboard-layout">
-      {role !== 'admin' && <Sidebar patients={patientList} selected={selectedPatient} onSelect={setSelectedPatient} />}
+    <div className={`dashboard-layout ${role !== 'nurse' ? 'dashboard-layout--wide' : ''}`}>
+      {role === 'nurse' && <Sidebar patients={patientList} selected={selectedPatient} onSelect={setSelectedPatient} />}
       <main className={`dashboard-main ${role}`}>
-        <DashboardHeader
-          title={role === 'nurse' ? 'Nurse Console' : role === 'doctor' ? 'Doctor Console' : 'Admin Command Center'}
-          subtitle={
-            role === 'nurse'
-              ? 'Patient-focused ICU monitoring and rapid response'
-              : role === 'doctor'
-              ? 'Clinical review of high-risk patients'
-              : 'Hospital overview and bed occupancy dashboard'
-          }
-          darkMode={false}
-          onToggleTheme={() => null}
-        />
+        {role !== 'doctor' && (
+          <DashboardHeader
+            title={role === 'nurse' ? 'Nurse Console' : role === 'admin' ? 'Admin Command Center' : 'Doctor Console'}
+            subtitle={
+              role === 'nurse'
+                ? 'Patient-focused ICU monitoring and rapid response'
+                : role === 'admin'
+                ? 'Hospital overview and bed occupancy dashboard'
+                : 'Clinical review of high-risk patients'
+            }
+            darkMode={false}
+            onToggleTheme={() => null}
+          />
+        )}
+        {role === 'doctor' ? (
+          <section className="doctor-shell">
+            <header className="doctor-topnav">
+              <div className="doctor-brand-block">
+                <div className="doctor-brand-mark">
+                  <ShieldCheck size={18} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className="doctor-brand-name">VitalGuard</p>
+                  <p className="doctor-brand-sub">Doctor Console</p>
+                </div>
+              </div>
+              <nav className="doctor-nav-tabs" aria-label="Doctor navigation">
+                {doctorTabs.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    className={`doctor-nav-tab ${activeDoctorTab === tab ? 'active' : ''}`}
+                    onClick={() => setActiveDoctorTab(tab)}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </nav>
+              <div className="doctor-topnav-actions">
+                {showSearch ? (
+                  <div className="doctor-search-panel">
+                    <div className="doctor-search-field">
+                      <Search size={16} />
+                      <input
+                        type="search"
+                        placeholder="Search patients, condition"
+                        value={searchQuery}
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                        autoFocus
+                      />
+                      <button type="button" className="doctor-search-clear" onClick={() => setSearchQuery('')}>
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="doctor-search-button"
+                    onClick={() => {
+                      setShowSearch(true)
+                      setShowProfileMenu(false)
+                    }}
+                    aria-label="Open search"
+                  >
+                    <Search size={18} />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="doctor-profile-summary"
+                  onClick={() => {
+                    setShowProfileMenu((prev) => !prev)
+                    setShowSearch(false)
+                  }}
+                  aria-label="Open profile menu"
+                >
+                  <div>
+                    <p className="doctor-profile-name">Hanna Kenter</p>
+                    <p className="doctor-profile-location">Kansas</p>
+                  </div>
+                  <span className="doctor-profile-avatar">{userInitials}</span>
+                </button>
+                {showProfileMenu && (
+                  <div className="doctor-profile-menu">
+                    <button type="button" className="doctor-profile-menu-item">Profile</button>
+                    <button type="button" className="doctor-profile-menu-item" onClick={handleLogout}>
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </header>
 
-        {role === 'admin' ? (
+            {renderDoctorTabContent()}
+          </section>
+        ) : role === 'admin' ? (
           <section className="admin-overview">
             <div className="admin-dashboard-grid">
               <div className="admin-overview-cards">
@@ -253,64 +750,6 @@ export function DashboardPage({ role }: DashboardPageProps) {
                     </div>
                   </section>
                 </section>
-              </div>
-            </div>
-          </section>
-        ) : role === 'doctor' ? (
-          <section className="doctor-grid">
-            <div className="doctor-left">
-              <div className="panel-header">
-                <h2>Critical Patient List</h2>
-                <p>Review only the active high-priority cases.</p>
-              </div>
-              <div className="critical-list">
-                {criticalPatients.map((item) => (
-                  <div key={item.id} className="critical-card" onClick={() => setSelectedPatient(item.id)}>
-                    <p className="critical-name">{item.name}</p>
-                    <p>{item.bed}</p>
-                    <span className={`status-pill small ${item.status}`}>{item.status.replace('-', ' ')}</span>
-                    <p>Risk {item.riskScore}%</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="doctor-right">
-              <div className="monitor-card detail-card">
-                <div className="monitor-hero">
-                  <div className="monitor-badge">Review</div>
-                  <div className="monitor-meta">
-                    <p className="monitor-name">{patient.name}</p>
-                    <p>{patient.bed} · {patient.condition}</p>
-                  </div>
-                </div>
-                <div className="doctor-metrics">
-                  <FeatureCard title="Heart Rate" value="88 bpm" detail="Moderate elevation" />
-                  <FeatureCard title="SpO₂" value="92%" detail="Low oxygen saturation" />
-                  <FeatureCard title="Risk Score" value={`${patient.riskScore}%`} detail="Critical care" />
-                </div>
-                <div className="chart-card">
-                  <p className="chart-title">ECG Trend</p>
-                  <ResponsiveContainer width="100%" height={220}>
-                    <LineChart data={doctorLineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#30415622" />
-                      <XAxis dataKey="time" tick={{ fill: '#a8b4cf', fontSize: 12 }} />
-                      <YAxis tick={{ fill: '#a8b4cf', fontSize: 12 }} />
-                      <Tooltip contentStyle={{ background: '#0f172a', border: 'none', color: '#fff' }} />
-                      <Line type="monotone" dataKey="value" stroke="#38bdf8" strokeWidth={3} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              <div className="patient-summary-card">
-                <div className="panel-header">
-                  <h2>Medical Summary</h2>
-                </div>
-                <p>Patient experienced a fall and has an abnormal ECG signature. SpO₂ decreased under 94% and requires immediate medical assessment.</p>
-                <div className="summary-tags">
-                  <span>ECG Abnormal</span>
-                  <span>SpO₂ Low</span>
-                  <span>Fall Detected</span>
-                </div>
               </div>
             </div>
           </section>

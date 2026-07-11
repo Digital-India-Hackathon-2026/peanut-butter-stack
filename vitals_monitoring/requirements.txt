@@ -1,0 +1,6 @@
+wfdb
+fastapi
+uvicorn[standard]
+websockets
+numpy
+twilio>=9.0.0

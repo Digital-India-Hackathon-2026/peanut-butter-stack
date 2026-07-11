@@ -99,7 +99,7 @@ export const patientList: PatientOverview[] = [
       riskScore: 78,
       status: 'critical',
     },
-    videoUrl: 'http://127.0.0.1:8001/fall.mp4',
+    videoUrl: '/fall.mp4',
     icuId: 'P003',
     bp: '90/60',
     respiratoryRate: '24',

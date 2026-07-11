@@ -12,9 +12,10 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from audio_monitoring.main import app as audio_app
+from auth import router as auth_router
 from video_monitoring.main import app as video_app
 from vitals_monitoring.main import app as vitals_app
-from audio_monitoring.main import app as audio_app
 
 app = FastAPI(
     title="VitalGuard Unified Monitoring",
@@ -31,6 +32,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth_router)
 
 app.mount("/video", video_app)
 app.mount("/vitals", vitals_app)
@@ -59,4 +62,4 @@ async def root() -> dict[str, object]:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=False)

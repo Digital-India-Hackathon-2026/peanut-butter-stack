@@ -1,17 +1,19 @@
-# Node modules
-node_modules
-
-# Frontend build artifacts
-frontend/dist/
-frontend/node_modules/
+# Environment files
+*.env
+.env
 
 # Python artifacts
 __pycache__/
 *.py[cod]
-.venv/
+*.pyo
+*.pyd
 
-# Video/demo artifacts
-fall detection/*.mp4
-fall detection/*.png
-fall detection/*.html
-video_monitoring/__pycache__/
+# Node artifacts
+node_modules/
+frontend/node_modules/
+
+# VS Code and local tooling
+.vscode/
+.commandcode/
+.DS_Store
+Thumbs.db

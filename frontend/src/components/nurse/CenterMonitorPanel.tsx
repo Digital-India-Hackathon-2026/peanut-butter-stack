@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  Heart, Droplets, Activity, AlertTriangle, Shield, Camera, Video, Maximize2,
+  Heart, Droplets, Activity, AlertTriangle, Shield, Camera,
 } from 'lucide-react'
 import type { VGPatient } from '../../lib/nurseMockData'
 import { VitalStatCard } from './VitalStatCard'
@@ -10,7 +10,7 @@ interface CenterMonitorPanelProps {
   patient: VGPatient | null
 }
 
-const LIVE_STREAM_URL = '/video-feed'
+const VITALS_API = 'http://localhost:8001'
 
 function NoCriticalPlaceholder() {
   return (
@@ -68,13 +68,59 @@ function tlTextClass(type: string) {
 }
 
 export function CenterMonitorPanel({ patient }: CenterMonitorPanelProps) {
-  const [videoMode, setVideoMode] = useState<'live' | 'demo'>('live')
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const [webcamActive, setWebcamActive] = useState(false)
+  const [webcamError, setWebcamError] = useState<string | null>(null)
+  const [videoMode, setVideoMode] = useState<'none' | 'demo' | 'live'>('none')
+  const [sendingAlert, setSendingAlert] = useState(false)
+  const [alertStatus, setAlertStatus] = useState<string | null>(null)
 
-  const isCritical = patient?.status === 'critical'
-  const isWarning = patient?.status === 'warning'
+  if (!patient) {
+    return (
+      <section className="cm-panel">
+        <NoCriticalPlaceholder />
+      </section>
+    )
+  }
+
+  const isSamplePatient = patient.name === 'Devika Nair'
+  const isCritical = patient.status === 'critical'
+  const isWarning = patient.status === 'warning'
   const showMonitor = isCritical || isWarning
 
-  if (!patient || !showMonitor) {
+  useEffect(() => {
+    setVideoMode('none')
+    setWebcamActive(false)
+    setWebcamError(null)
+  }, [patient.patient_id])
+
+  useEffect(() => {
+    if (!webcamActive || videoMode !== 'live') return
+
+    const videoEl = videoRef.current
+    if (!videoEl) return
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then((stream) => {
+        videoEl.srcObject = stream
+        videoEl.play().catch(() => {
+          setWebcamError('Unable to play webcam stream.')
+        })
+      })
+      .catch((err) => {
+        console.error('Webcam error:', err)
+        setWebcamError('Unable to access webcam. Please enable camera permissions.')
+      })
+
+    return () => {
+      if (videoEl?.srcObject instanceof MediaStream) {
+        videoEl.srcObject.getTracks().forEach((track) => track.stop())
+        videoEl.srcObject = null
+      }
+    }
+  }, [webcamActive, videoMode])
+
+  if (!showMonitor) {
     return (
       <section className="cm-panel">
         <NoCriticalPlaceholder />
@@ -85,6 +131,35 @@ export function CenterMonitorPanel({ patient }: CenterMonitorPanelProps) {
   const statusLabel = isCritical ? 'CRITICAL' : 'WARNING'
   const statusCls = isCritical ? 'cm-status--critical' : 'cm-status--warning'
   const ecgAbnormal = patient.latestEcg !== 'normal'
+
+  const handleSendAlert = async () => {
+    if (!patient) return
+    setSendingAlert(true)
+    setAlertStatus(null)
+
+    try {
+      const response = await fetch(`${VITALS_API}/alerts/doctor-sms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bed_id: patient.bed,
+          severity: 'critical',
+          reset_cooldown: true,
+          doctor_number: '9346156382',
+        }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        setAlertStatus(`Alert failed: ${data?.error ?? response.statusText}`)
+      } else {
+        setAlertStatus('Alert sent successfully. Check your phone.')
+      }
+    } catch (error) {
+      setAlertStatus(`Unable to send alert: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setSendingAlert(false)
+    }
+  }
 
   // Severity label
   const severityStr = isCritical ? 'CRITICAL' : patient.severity === 'high-risk' ? 'HIGH' : 'MODERATE'
@@ -99,23 +174,6 @@ export function CenterMonitorPanel({ patient }: CenterMonitorPanelProps) {
             LIVE MONITORING — {patient.room} / {patient.bed}
           </span>
           <span className={`cm-status-badge ${statusCls}`}>{statusLabel}</span>
-        </div>
-        <div className="cm-monitor-controls">
-          <button
-            className={`cm-view-btn ${videoMode === 'live' ? 'active' : ''}`}
-            onClick={() => setVideoMode('live')}
-          >
-            <Camera size={13} /> Live Camera
-          </button>
-          <button
-            className={`cm-view-btn ${videoMode === 'demo' ? 'active' : ''}`}
-            onClick={() => setVideoMode('demo')}
-          >
-            <Video size={13} /> Sample Video
-          </button>
-          <button className="cm-fullscreen-btn" aria-label="Fullscreen">
-            <Maximize2 size={14} />
-          </button>
         </div>
       </div>
 
@@ -132,7 +190,7 @@ export function CenterMonitorPanel({ patient }: CenterMonitorPanelProps) {
         )}
         <div className="cm-overlay-live">
           <span className="cm-live-dot" />
-          <span>LIVE</span>
+          <span>{videoMode === 'demo' ? 'SAMPLE' : 'LIVE'}</span>
         </div>
         {isCritical && (
           <div className="cm-overlay-ai">
@@ -152,30 +210,55 @@ export function CenterMonitorPanel({ patient }: CenterMonitorPanelProps) {
         {videoMode === 'demo' ? (
           <video
             className="cm-video"
-            src="http://127.0.0.1:8001/fall.mp4"
+            src="/fall.mp4"
             autoPlay
             loop
             muted
             playsInline
           />
         ) : (
-          <img
+          <video
+            ref={videoRef}
             className="cm-video"
-            src={LIVE_STREAM_URL}
-            alt="Live camera feed"
-            onError={(e) => {
-              const img = e.currentTarget
-              img.style.display = 'none'
-              const next = img.nextElementSibling as HTMLElement
-              if (next) next.style.display = 'flex'
-            }}
+            autoPlay
+            playsInline
+            muted
+            controls={false}
           />
         )}
-        <div className="cm-video-fallback" style={{ display: 'none' }}>
-          <Camera size={40} opacity={0.25} />
-          <span>Camera feed unavailable</span>
-          <span className="cm-fallback-sub">Switch to Sample Video for demo</span>
-        </div>
+        {videoMode === 'none' && (
+          <div className="cm-video-fallback" style={{ display: 'flex' }}>
+            <Camera size={40} opacity={0.25} />
+            <span>{isSamplePatient ? 'Click to view Devika Nair sample video.' : 'Click to start the live webcam.'}</span>
+            <button
+              className="cm-video-action-btn"
+              type="button"
+              onClick={() => {
+                setWebcamError(null)
+                if (isSamplePatient) {
+                  setVideoMode('demo')
+                } else {
+                  setVideoMode('live')
+                  setWebcamActive(true)
+                }
+              }}
+            >
+              View Video
+            </button>
+          </div>
+        )}
+        {videoMode === 'live' && !webcamActive && (
+          <div className="cm-video-fallback" style={{ display: 'flex' }}>
+            <Camera size={40} opacity={0.25} />
+            <span>Starting webcam…</span>
+          </div>
+        )}
+        {videoMode === 'live' && webcamActive && webcamError && (
+          <div className="cm-video-fallback" style={{ display: 'flex' }}>
+            <Camera size={40} opacity={0.25} />
+            <span>{webcamError}</span>
+          </div>
+        )}
       </div>
 
       {/* Vital Stat Cards */}
@@ -261,6 +344,19 @@ export function CenterMonitorPanel({ patient }: CenterMonitorPanelProps) {
               </div>
             ))}
           </div>
+          {isCritical && (
+            <div className="cm-send-alert-row">
+              <button
+                className="cm-send-alert-btn"
+                type="button"
+                disabled={sendingAlert}
+                onClick={handleSendAlert}
+              >
+                {sendingAlert ? 'Sending alert…' : 'Send Alert to Doctor'}
+              </button>
+              {alertStatus && <span className="cm-send-alert-note">{alertStatus}</span>}
+            </div>
+          )}
         </div>
 
         <div className="cm-timeline-card">

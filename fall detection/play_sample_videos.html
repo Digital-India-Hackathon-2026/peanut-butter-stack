@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitalGuard Sample Fall Videos</title>
+  <style>
+    body { margin: 0; background: #071629; color: #eef2ff; font-family: Arial, sans-serif; }
+    .page { padding: 24px; display: grid; gap: 22px; justify-items: center; }
+    h1 { margin: 0; font-size: 28px; }
+    .grid { display: grid; gap: 22px; grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr); width: 100%; max-width: 1280px; }
+    .card { background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 18px; box-shadow: 0 14px 40px rgba(15, 23, 42, 0.35); }
+    .card h2 { margin-top: 0; font-size: 20px; }
+    video { width: 100%; height: auto; border-radius: 10px; background: #000; }
+    .note { max-width: 880px; color: #94a3b8; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>VitalGuard Sample Fall Videos</h1>
+    <div class="note">If either video fails to load, ensure the file exists in the same folder and your browser permits local file access.</div>
+    <div class="grid">
+      <div class="card">
+        <h2>Raw Sample Video</h2>
+        <video controls autoplay muted loop>
+          <source src="fall.mp4" type="video/mp4" />
+          Your browser does not support video playback.
+        </video>
+      </div>
+      <div class="card">
+        <h2>Annotated Sample Video</h2>
+        <video controls autoplay muted loop>
+          <source src="annotated_fall.mp4" type="video/mp4" />
+          Your browser does not support video playback.
+        </video>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

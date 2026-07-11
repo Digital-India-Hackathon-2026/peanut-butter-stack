@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+websockets
+pymongo
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
+email-validator
+numpy
+wfdb
+twilio>=9.0.0

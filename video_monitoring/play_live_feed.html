@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitalGuard Live Webcam</title>
+  <style>
+    body { margin: 0; background: #0b1220; color: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; }
+    h1 { margin: 20px 0 10px; font-size: 24px; }
+    .feed { border: 4px solid #334155; border-radius: 14px; background: #000; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35); }
+    img { max-width: 90vw; max-height: 80vh; display: block; }
+    .note { margin-top: 14px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <h1>VitalGuard Live Webcam Feed</h1>
+  <div class="feed">
+    <img src="http://127.0.0.1:8000/video-feed" alt="Live webcam feed" />
+  </div>
+  <p class="note">If the feed does not appear, ensure the FastAPI server is running and the webcam source is available.</p>
+</body>
+</html>
